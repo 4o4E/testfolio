@@ -1,0 +1,21 @@
+schema: spec-driven
+
+context: |
+  本项目为项目无关的测试结果管理系统，用户只读查看，LLM通过独立受保护接口录入真实结果及证据。
+  使用Python/FastAPI/SQLite及React/shadcn Nova；不依赖某个被测业务项目。
+  文档使用中文，保留OpenSpec结构标题及SHALL/MUST关键字。
+  术语见GLOSSARY.md，设计决定记录在相关变更design.md的Decisions。
+rules:
+  proposal:
+    - 明确用户操作、范围与不包含的事项。
+  specs:
+    - 只写可验证的外部行为，不写内部函数或框架选择。
+  design:
+    - 说明实际约束、已确认选择和必要的替代方案。
+  tasks:
+    - 每项任务具有明确产出和验证条件，只记录真实依赖。
+operations:
+  apply:
+    guidance:
+      - 使用实际SQLite、HTTP或浏览器验证变更，不伪造执行结果。
+      - 保留历史结果与其他会话的新记录，数据库结构变更先得到用户确认。

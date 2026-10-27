@@ -1,0 +1,17 @@
+.git
+.github
+docs
+*.env
+*.sqlite*
+data
+artifacts
+tests
+skills
+scripts
+__pycache__
+.pytest_cache
+web/node_modules
+web/dist
+node_modules
+.agents
+openspec

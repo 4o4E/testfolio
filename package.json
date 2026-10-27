@@ -1,0 +1,11 @@
+{
+  "name": "testfolio-tooling",
+  "private": true,
+  "scripts": {
+    "spec": "openspec",
+    "spec:validate": "openspec validate --all --strict"
+  },
+  "devDependencies": {
+    "@fission-ai/openspec": "1.15.0"
+  }
+}

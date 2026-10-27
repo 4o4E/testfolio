@@ -1,0 +1,4 @@
+interface:
+  display_name: "测试用例与结果录入"
+  short_description: "维护完整测试用例目录，执行真实测试并将步骤、结果与截图录入本机系统"
+  default_prompt: "使用 $test-results 按指定环境执行测试并把实际结果和截图录入测试管理系统。"

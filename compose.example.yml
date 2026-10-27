@@ -1,0 +1,22 @@
+name: testfolio
+services:
+  app:
+    image: ghcr.io/4o4e/testfolio:${TESTFOLIO_VERSION:-v0.1.0}
+    restart: unless-stopped
+    env_file:
+      - ${TEST_RESULTS_SERVER_ENV:?指定 setup_local.py 生成的 server.env 完整路径}
+    environment:
+      TEST_RESULTS_DATA_DIR: /data/sqlite
+      TEST_RESULTS_ARTIFACT_DIR: /data/artifacts
+    ports:
+      - "${TEST_RESULTS_READ_BIND:-127.0.0.1}:8080:8080"
+      - "127.0.0.1:8081:8081"
+    volumes:
+      - ${TEST_RESULTS_RESOURCE_DIR:?指定持久资源目录}/sqlite:/data/sqlite
+      - ${TEST_RESULTS_RESOURCE_DIR:?指定持久资源目录}/artifacts:/data/artifacts
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health',timeout=3); urllib.request.urlopen('http://127.0.0.1:8081/health',timeout=3)"]
+      interval: 20s
+      timeout: 8s
+      start_period: 10s
+      retries: 3
