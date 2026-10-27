@@ -58,7 +58,8 @@ def main(image):
                             if json.load(response) != {"status": "ok"}:
                                 raise RuntimeError("Health endpoint returned an unexpected response")
                         break
-                    except (URLError, TimeoutError):
+                    # Docker can accept TCP before the application's HTTP listener is ready.
+                    except (URLError, TimeoutError, ConnectionError):
                         if time.monotonic() >= deadline:
                             raise
                         time.sleep(1)
@@ -85,6 +86,9 @@ def main(image):
             else:
                 raise RuntimeError("Unauthenticated write was accepted")
             print("Container HTTP smoke check passed")
+        except Exception:
+            subprocess.run(["docker", "logs", container], check=True)
+            raise
         finally:
             subprocess.run(["docker", "stop", container], check=True, capture_output=True)
 
