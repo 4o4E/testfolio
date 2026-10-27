@@ -2,7 +2,7 @@
 
 Testfolio 是自托管的测试记录工具：它按项目保存用例目录、测试轮次、逐步实际结果、截图和报告。网页供团队只读查看；录入由带私有令牌的独立接口完成。Testfolio 不会替用户操作被测系统，也不授予被测系统的访问权限。
 
-首版为 `v0.1.0`，项目使用 MIT 许可证。源码位于[公开 GitHub 仓库](https://github.com/4o4E/testfolio)，容器镜像为 `ghcr.io/4o4e/testfolio`。
+当前稳定版本为 `v0.1.1`，项目使用 MIT 许可证。源码位于[公开 GitHub 仓库](https://github.com/4o4E/testfolio)，容器镜像为 `ghcr.io/4o4e/testfolio`。
 
 ## 功能范围
 
@@ -53,7 +53,7 @@ docker compose -f compose.example.yml up -d --pull never --no-build
 docker compose -f compose.example.yml ps
 ```
 
-Compose 默认使用 `ghcr.io/4o4e/testfolio:v0.1.0`。查看页面打开 `http://localhost:8080`。检查两项健康接口：
+Compose 默认使用 `ghcr.io/4o4e/testfolio:v0.1.1`。查看页面打开 `http://localhost:8080`。检查两项健康接口：
 
 ```bash
 curl --fail http://localhost:8080/health
@@ -62,10 +62,10 @@ curl --fail http://localhost:8081/health
 
 空数据库启动后不会自动出现演示项目或虚构的测试结果。先安装并使用录入 skill，或按 [API.md](API.md) 与 [docs/recording.md](docs/recording.md) 录入真实目录和轮次，之后页面才会显示记录。
 
-需要选择其他版本时，在启动前设置 `TESTFOLIO_VERSION`，例如 `v0.1.0`，然后重新拉取并启动：
+需要选择版本时，在启动前设置 `TESTFOLIO_VERSION`，例如 `v0.1.1`，然后重新拉取并启动：
 
 ```bash
-export TESTFOLIO_VERSION=v0.1.0
+export TESTFOLIO_VERSION=v0.1.1
 docker compose -f compose.example.yml pull
 docker compose -f compose.example.yml up -d --pull never --no-build
 ```

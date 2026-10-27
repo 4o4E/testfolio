@@ -1,7 +1,7 @@
 name: testfolio
 services:
   app:
-    image: ghcr.io/4o4e/testfolio:${TESTFOLIO_VERSION:-v0.1.0}
+    image: ghcr.io/4o4e/testfolio:${TESTFOLIO_VERSION:-v0.1.1}
     pull_policy: missing
     restart: unless-stopped
     env_file:

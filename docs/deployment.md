@@ -34,7 +34,7 @@ docker compose -f compose.example.yml up -d --pull never --no-build
 docker compose -f compose.example.yml ps
 ```
 
-默认镜像版本为 `ghcr.io/4o4e/testfolio:v0.1.0`。部署在本机时，访问 `http://localhost:8080`。可以请求 `/health` 确认两个服务均可响应：
+默认镜像版本为 `ghcr.io/4o4e/testfolio:v0.1.1`。部署在本机时，访问 `http://localhost:8080`。可以请求 `/health` 确认两个服务均可响应：
 
 ```bash
 curl --fail http://localhost:8080/health
@@ -48,7 +48,7 @@ curl --fail http://localhost:8081/health
 升级前先备份 SQLite 数据库及附件，阅读新版本发布说明，再选择一个明确的正式版本标签。将 `TESTFOLIO_VERSION` 设为该标签，先显式拉取版本，再使用已拉取的镜像启动：
 
 ```bash
-export TESTFOLIO_VERSION=v0.1.0
+export TESTFOLIO_VERSION=v0.1.1
 docker compose -f compose.example.yml pull
 docker compose -f compose.example.yml up -d --pull never --no-build
 docker compose -f compose.example.yml ps
