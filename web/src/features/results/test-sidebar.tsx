@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react"
+import { useEffect, useMemo } from "react"
 import {
   ChevronDown,
   CircleAlert,
@@ -11,6 +11,7 @@ import {
 } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   Collapsible,
   CollapsibleContent,
@@ -48,6 +49,7 @@ import {
 } from "@/components/ui/sidebar"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { humanTitle, runStartedAt, statusLabels, statusOf } from "./model"
+import { directoryKeys, useReaderStore } from "./store"
 import type {
   CaseEntry,
   EntryStatus,
@@ -164,26 +166,30 @@ function CaseLeaf({
 
 function TreeBranch({
   node,
+  projectId,
   selectedCaseId,
-  searchActive,
   onCaseChange,
   depth = 0,
 }: {
   node: TreeNode
+  projectId: string
   selectedCaseId: string | null
-  searchActive: boolean
   onCaseChange: (id: string) => void
   depth?: number
 }) {
-  const containsSelected = node.entries.some(
-    (entry) => entry.case.id === selectedCaseId
+  const key = JSON.stringify([projectId, ...node.path])
+  const open = useReaderStore(
+    (state) => state.expandedDirectories[key] ?? false
   )
-  const [open, setOpen] = useState(containsSelected)
+  const setDirectoriesOpen = useReaderStore((state) => state.setDirectoriesOpen)
 
   const children = [...node.children.values()]
 
   return (
-    <Collapsible open={searchActive || open} onOpenChange={setOpen}>
+    <Collapsible
+      open={open}
+      onOpenChange={(value) => setDirectoriesOpen([key], value)}
+    >
       {depth === 0 ? (
         <SidebarMenuItem>
           <CollapsibleTrigger asChild>
@@ -200,7 +206,7 @@ function TreeBranch({
                 data-testid="directory-arrow"
                 className={cn(
                   "ml-auto shrink-0 transition-transform",
-                  (searchActive || open) && "rotate-180"
+                  open && "rotate-180"
                 )}
                 aria-hidden="true"
               />
@@ -210,10 +216,10 @@ function TreeBranch({
             <SidebarMenuSub>
               {children.map((child) => (
                 <TreeBranch
-                  key={`${JSON.stringify(child.path)}${child.entries.some((entry) => entry.case.id === selectedCaseId) ? "-selected" : ""}`}
+                  key={JSON.stringify(child.path)}
                   node={child}
+                  projectId={projectId}
                   selectedCaseId={selectedCaseId}
-                  searchActive={searchActive}
                   onCaseChange={onCaseChange}
                   depth={depth + 1}
                 />
@@ -245,7 +251,7 @@ function TreeBranch({
                 data-testid="directory-arrow"
                 className={cn(
                   "ml-auto shrink-0 transition-transform",
-                  (searchActive || open) && "rotate-180"
+                  open && "rotate-180"
                 )}
                 aria-hidden="true"
               />
@@ -255,10 +261,10 @@ function TreeBranch({
             <SidebarMenuSub>
               {children.map((child) => (
                 <TreeBranch
-                  key={`${JSON.stringify(child.path)}${child.entries.some((entry) => entry.case.id === selectedCaseId) ? "-selected" : ""}`}
+                  key={JSON.stringify(child.path)}
                   node={child}
+                  projectId={projectId}
                   selectedCaseId={selectedCaseId}
-                  searchActive={searchActive}
                   onCaseChange={onCaseChange}
                   depth={depth + 1}
                 />
@@ -340,6 +346,28 @@ export function TestSidebar({
   }, [entries, scope, search, statusFilter])
 
   const tree = useMemo(() => makeTree(visibleEntries), [visibleEntries])
+  const setDirectoriesOpen = useReaderStore((state) => state.setDirectoriesOpen)
+  const visibleDirectoryKeys = visibleEntries.flatMap((entry) =>
+    directoryKeys(projectId, entry.case.path)
+  )
+  // Serialize paths so a data refresh does not reopen directories the user closed.
+  const selectedDirectoryKeys = JSON.stringify(
+    directoryKeys(
+      projectId,
+      entries.find((entry) => entry.case.id === selectedCaseId)?.case.path ?? []
+    )
+  )
+  const searchDirectoryKeys = JSON.stringify(
+    search.trim() ? visibleDirectoryKeys : []
+  )
+
+  useEffect(() => {
+    setDirectoriesOpen(JSON.parse(selectedDirectoryKeys), true)
+  }, [selectedCaseId, selectedDirectoryKeys, setDirectoriesOpen])
+
+  useEffect(() => {
+    setDirectoriesOpen(JSON.parse(searchDirectoryKeys), true)
+  }, [search, searchDirectoryKeys, setDirectoriesOpen])
 
   return (
     <Sidebar collapsible={isMobile ? "offcanvas" : "none"} className="w-full">
@@ -470,18 +498,38 @@ export function TestSidebar({
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>
-            用例目录 <span className="ml-auto">{visibleEntries.length}</span>
-          </SidebarGroupLabel>
+          <div className="flex flex-wrap items-center justify-between gap-1">
+            <SidebarGroupLabel>
+              用例目录 <span className="ml-1.5">{visibleEntries.length}</span>
+            </SidebarGroupLabel>
+            <div className="flex items-center">
+              <Button
+                variant="ghost"
+                size="xs"
+                disabled={!tree.length}
+                onClick={() => setDirectoriesOpen(visibleDirectoryKeys, true)}
+              >
+                全部展开
+              </Button>
+              <Button
+                variant="ghost"
+                size="xs"
+                disabled={!tree.length}
+                onClick={() => setDirectoriesOpen(visibleDirectoryKeys, false)}
+              >
+                全部收起
+              </Button>
+            </div>
+          </div>
           <SidebarGroupContent>
             {tree.length ? (
               <SidebarMenu>
                 {tree.map((node) => (
                   <TreeBranch
-                    key={`${JSON.stringify(node.path)}${node.entries.some((entry) => entry.case.id === selectedCaseId) ? "-selected" : ""}`}
+                    key={JSON.stringify(node.path)}
                     node={node}
+                    projectId={projectId}
                     selectedCaseId={selectedCaseId}
-                    searchActive={search.trim().length > 0}
                     onCaseChange={onCaseChange}
                   />
                 ))}
