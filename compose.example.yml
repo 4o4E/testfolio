@@ -2,6 +2,7 @@ name: testfolio
 services:
   app:
     image: ghcr.io/4o4e/testfolio:${TESTFOLIO_VERSION:-v0.1.0}
+    pull_policy: missing
     restart: unless-stopped
     env_file:
       - ${TEST_RESULTS_SERVER_ENV:?指定 setup_local.py 生成的 server.env 完整路径}

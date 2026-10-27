@@ -12,6 +12,7 @@ __pycache__
 .pytest_cache
 web/node_modules
 web/dist
+web/README.md
 node_modules
 .agents
 openspec

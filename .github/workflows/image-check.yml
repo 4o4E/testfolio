@@ -1,0 +1,38 @@
+name: Image check
+
+on:
+  workflow_call:
+    inputs:
+      export-cache:
+        description: Export cache from a trusted main-branch build
+        type: boolean
+        default: false
+
+# Inherit the caller's permissions: PR callers have no package write permission.
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4
+        if: inputs.export-cache
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v7
+        with:
+          context: .
+          load: true
+          tags: testfolio:ci
+          cache-from: |
+            type=registry,ref=ghcr.io/4o4e/testfolio:buildcache-ci
+            type=registry,ref=ghcr.io/4o4e/testfolio:buildcache-release
+          cache-to: ${{ inputs.export-cache && 'type=registry,ref=ghcr.io/4o4e/testfolio:buildcache-ci,mode=max' || '' }}
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.11'
+      - run: python scripts/ci_smoke.py testfolio:ci
+      - name: Report runtime layers
+        run: docker image inspect testfolio:ci --format '{{json .RootFS.Layers}}'

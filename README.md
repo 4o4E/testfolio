@@ -49,7 +49,7 @@ export TEST_RESULTS_READ_BIND="127.0.0.1"
 
 ```bash
 docker compose -f compose.example.yml pull
-docker compose -f compose.example.yml up -d
+docker compose -f compose.example.yml up -d --pull never --no-build
 docker compose -f compose.example.yml ps
 ```
 
@@ -67,7 +67,7 @@ curl --fail http://localhost:8081/health
 ```bash
 export TESTFOLIO_VERSION=v0.1.0
 docker compose -f compose.example.yml pull
-docker compose -f compose.example.yml up -d
+docker compose -f compose.example.yml up -d --pull never --no-build
 ```
 
 升级前请按 [部署与备份说明](docs/deployment.md) 备份数据库和附件。升级步骤、回退注意事项和数据目录说明也见该文档。
@@ -100,7 +100,9 @@ python3 skills/test-results/scripts/client.py --help
 
 ## 开发
 
-开发环境需要 Python 3.11 或更新版本、Node.js 22 或更新版本。可运行以下仓库已有的检查：
+开发环境需要 Python 3.11 或更新版本、Node.js 22 或更新版本。CI 对网页运行 lint 和类型检查；生产网页包仅在 Docker 构建时生成。Python 运行依赖和开发依赖分别由 `requirements.txt` 与 `requirements-dev.txt` 锁定，依赖声明位于 `requirements.in` 与 `requirements-dev.in`。更新依赖时应同时更新声明和锁文件；开发依赖受运行依赖锁文件约束，确保两组安装使用相同的运行库版本。锁文件由 uv 0.13.6 按 Python 3.11 和通用平台条件生成，应用仍通过 pip 安装依赖。
+
+可运行以下仓库已有的检查：
 
 ```bash
 pip install -r requirements-dev.txt
@@ -109,7 +111,7 @@ npm ci
 npm run spec:validate
 npm --prefix web ci
 npm --prefix web run lint
-npm --prefix web run build
+npm --prefix web run typecheck
 ```
 
-Docker 镜像会在构建阶段编译网页，并将静态文件装入 Python 服务镜像。CI 和标签发布约定见 [发布说明](docs/releases.md)；请以仓库当前工作流的实际配置为准。
+Docker 构建固定 Node.js 与 Python 基础镜像的公开版本和多架构 digest。修改基础镜像版本或 digest 时，应先确认对应公开镜像及目标架构，再一并更新 Dockerfile。CI 与发布复用 GHCR 中的构建缓存；缓存标签只供构建使用，不能作为应用版本部署。CI 和标签发布约定见 [发布说明](docs/releases.md)。

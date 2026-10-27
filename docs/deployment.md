@@ -30,7 +30,7 @@ export TEST_RESULTS_READ_BIND="127.0.0.1"
 
 ```bash
 docker compose -f compose.example.yml pull
-docker compose -f compose.example.yml up -d
+docker compose -f compose.example.yml up -d --pull never --no-build
 docker compose -f compose.example.yml ps
 ```
 
@@ -45,18 +45,22 @@ curl --fail http://localhost:8081/health
 
 ## 升级和回退
 
-升级前先备份 SQLite 数据库及附件，阅读新版本发布说明，再选择一个明确的版本标签。将 `TESTFOLIO_VERSION` 设为该标签，然后拉取并重建容器：
+升级前先备份 SQLite 数据库及附件，阅读新版本发布说明，再选择一个明确的正式版本标签。将 `TESTFOLIO_VERSION` 设为该标签，先显式拉取版本，再使用已拉取的镜像启动：
 
 ```bash
 export TESTFOLIO_VERSION=v0.1.0
 docker compose -f compose.example.yml pull
-docker compose -f compose.example.yml up -d
+docker compose -f compose.example.yml up -d --pull never --no-build
 docker compose -f compose.example.yml ps
 ```
 
 启动后检查查看和录入服务健康接口，并打开页面确认记录可读。不要使用浮动的 `latest` 标签来代替明确版本。
 
-回退时将 `TESTFOLIO_VERSION` 改为先前使用的版本，再执行 `pull` 和 `up -d`。若新版本已经改变数据库格式，旧镜像可能无法读取升级后的数据库；应同时恢复升级前成套保存的数据库和附件。Testfolio 不会自动回滚数据格式。
+回退时将 `TESTFOLIO_VERSION` 改为先前保留的正式版本，再以 `up -d --pull never --no-build` 启动；只有本机尚无该版本时才需要先下载。若新版本已经改变数据库格式，旧镜像可能无法读取升级后的数据库；应同时恢复升级前成套保存的数据库和附件。Testfolio 不会自动回滚数据格式。
+
+普通重启使用 `docker compose -f compose.example.yml restart`，或使用 `docker compose -f compose.example.yml up -d --pull never --no-build`。日常重启不会检查远程镜像。Compose 示例采用 `pull_policy: missing`，常规 `up` 仅在本机缺少指定镜像时才尝试拉取；显式升级仍应先运行 `pull`，再以 `--pull never --no-build` 启动，确保切换的是已选定的正式版本。
+
+本机磁盘空间不足时，只清理已经确认不再使用的确切旧版本镜像。保留当前运行版本和一个可回退版本；不要执行会清理所有未使用镜像的全局清理命令。
 
 ## 备份与恢复
 
@@ -78,3 +82,18 @@ docker compose -f compose.example.yml start
 ## 网络边界
 
 查看端口包含测试数据，应限制为预期用户可访问。写入端口只绑定主机本机；远程运行 CLI 或 Agent 时，应使用受控隧道或在同一主机执行，并让客户端配置中的写入地址与实际连接方式一致。不要将写入令牌交给网页访问者。
+
+如果 Docker 拉取镜像需要经过代理，应在 Docker daemon 的网络配置中设置代理。只设置当前终端的代理环境变量，不能保证 Docker daemon 拉取镜像时使用该代理。修改主机全局 daemon 配置需要按主机管理流程另行授权。
+
+## 构建环境
+
+Docker 构建使用固定的 Node.js 与 Python 基础镜像公开版本及多架构 digest。基础镜像升级时，应核实新版本确实提供 `linux/amd64` 和 `linux/arm64`，然后更新相应 digest，并在 CI 与发布构建中验证两个目标架构。前端构建阶段在构建机平台运行，避免为目标架构模拟执行 Node.js 工具。
+
+Python 依赖由 `requirements.in` 和 `requirements-dev.in` 声明。使用 uv 0.13.6 按以下命令生成锁文件：
+
+```bash
+uv pip compile requirements.in --universal --python-version 3.11 --output-file requirements.txt --no-header
+uv pip compile requirements-dev.in --universal --python-version 3.11 --output-file requirements-dev.txt --no-header
+```
+
+更新依赖时手工修改声明并重新生成两个锁文件；`requirements-dev.in` 通过约束 `requirements.txt` 中的版本，确保开发依赖与运行依赖一致。Docker 与 CI 仍使用 pip 安装锁文件，不需要在应用运行环境安装 uv。

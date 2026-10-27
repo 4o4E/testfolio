@@ -21,6 +21,16 @@ GitHub Container Registry 的镜像包需要单独设为公开。推送成功本
 
 CI 检查细节和实际触发配置以仓库 `.github/workflows/` 中的工作流文件为准。不要仅根据标签存在或带有登录状态的拉取结果认定发布完成。
 
+## 构建缓存
+
+CI 与正式发布构建均从现有镜像包读取 `buildcache-ci` 和 `buildcache-release` 两个 BuildKit 缓存标签。仅可信 `main` 分支推送将更新 `buildcache-ci`；版本标签发布将更新 `buildcache-release`。拉取请求只能读取缓存，不会写入缓存标签。首次构建或依赖、基础镜像更新导致缓存失效时，构建可能需要下载依赖并重新生成镜像层。
+
+缓存标签不是应用版本，不包含可用于部署的正式镜像标签。部署只使用明确的正式版本标签，例如 `v0.1.0`；不得将 `buildcache-ci` 或 `buildcache-release` 设置为 `TESTFOLIO_VERSION`。
+
+Dockerfile 固定 Node.js 与 Python 基础镜像的公开版本和多架构 digest。维护者升级时，应先确认所选公开版本具有 `linux/amd64` 与 `linux/arm64` 镜像，再更新 Dockerfile 中的 digest，并通过 CI 和发布构建确认两个架构均可构建。前端 CI 只运行 lint 与类型检查，生产网页包由 Docker 构建生成。
+
+Python 依赖声明和完整锁文件的更新方式见[构建环境](deployment.md#构建环境)。安装仍使用 pip；升级依赖后检查锁文件变更，并通过 Python 测试和镜像构建验证。
+
 ## 开发验证
 
 本地主要检查命令见 [README.md](../README.md#开发)。发布工作流会执行仓库中配置的自动化检查；具体 Python、前端、规范校验及镜像构建任务以工作流定义为准。版本标签应在拟发布的提交上创建，避免在检查未通过时发布镜像或 Release。
@@ -38,7 +48,7 @@ docker pull ghcr.io/4o4e/testfolio:v0.1.0
 ```bash
 export TESTFOLIO_VERSION=v0.1.0
 docker compose -f compose.example.yml pull
-docker compose -f compose.example.yml up -d
+docker compose -f compose.example.yml up -d --pull never --no-build
 ```
 
 部署与数据保护步骤见 [部署说明](deployment.md)。
