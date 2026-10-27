@@ -24,6 +24,7 @@ def main(image):
         container = subprocess.run(
             [
                 "docker", "run", "--detach", "--rm",
+                "--user", f"{os.getuid()}:{os.getgid()}",
                 "--publish", "127.0.0.1::8080",
                 "--publish", "127.0.0.1::8081",
                 "--volume", f"{root}:/state",
