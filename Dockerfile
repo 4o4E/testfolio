@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-# The generated web files are shared by all runtime architectures.
+# Build the static web files on the builder's native platform.
 FROM --platform=$BUILDPLATFORM node:22-bookworm-slim@sha256:de170b39439eb0e5a3444ad7d60b015614a381e10fecae2e30ec9e735122f38d AS web-build
 WORKDIR /app/web
 COPY --link web/package.json web/package-lock.json ./

@@ -87,7 +87,7 @@ docker compose -f compose.example.yml start
 
 ## 构建环境
 
-Docker 构建使用固定的 Node.js 与 Python 基础镜像公开版本及多架构 digest。基础镜像升级时，应核实新版本确实提供 `linux/amd64` 和 `linux/arm64`，然后更新相应 digest，并在 CI 与发布构建中验证两个目标架构。前端构建阶段在构建机平台运行，避免为目标架构模拟执行 Node.js 工具。
+运行镜像只提供 `linux/amd64`（x64）。Docker 构建使用固定的 Node.js 与 Python 基础镜像公开版本及 digest；升级时核实新版本支持该架构，更新 digest 并通过 CI 和发布构建。前端生产包在原生构建平台生成一次，不需要模拟其他运行架构。
 
 Python 依赖由 `requirements.in` 和 `requirements-dev.in` 声明。使用 uv 0.13.6 按以下命令生成锁文件：
 

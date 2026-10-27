@@ -21,3 +21,12 @@ def test_pr_image_check_has_no_registry_write_permission():
     shared = yaml.safe_load((root / ".github/workflows/image-check.yml").read_text())
     assert "permissions" not in shared
     assert "permissions" not in shared["jobs"]["check"]
+
+
+def test_release_targets_x64_without_emulation():
+    root = Path(__file__).resolve().parents[1]
+    ci = yaml.safe_load((root / ".github/workflows/ci.yml").read_text())
+    steps = ci["jobs"]["publish-image"]["steps"]
+    build = next(step for step in steps if step.get("uses") == "docker/build-push-action@v7")
+    assert build["with"]["platforms"] == "linux/amd64"
+    assert not any(step.get("uses", "").startswith("docker/setup-qemu-action@") for step in steps)

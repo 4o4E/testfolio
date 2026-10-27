@@ -114,4 +114,4 @@ npm --prefix web run lint
 npm --prefix web run typecheck
 ```
 
-Docker 构建固定 Node.js 与 Python 基础镜像的公开版本和多架构 digest。修改基础镜像版本或 digest 时，应先确认对应公开镜像及目标架构，再一并更新 Dockerfile。CI 与发布复用 GHCR 中的构建缓存；缓存标签只供构建使用，不能作为应用版本部署。CI 和标签发布约定见 [发布说明](docs/releases.md)。
+Docker 构建固定 Node.js 与 Python 基础镜像的公开版本和 digest，运行镜像使用 `linux/amd64`（x64）。修改基础镜像版本或 digest 时，应先确认所选公开镜像支持该架构，再更新 Dockerfile。CI 与发布复用 GHCR 中的构建缓存；缓存标签只供构建使用，不能作为应用版本部署。CI 和标签发布约定见 [发布说明](docs/releases.md)。
